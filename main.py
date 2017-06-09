@@ -15,5 +15,12 @@ if __name__ == '__main__':
     vaninou.retrieveAnimeList()
     blackjack.retrieveAnimeList()
 
+    salixor.retrieveMangaList()
+    krocoh.retrieveMangaList()
+    phokopi.retrieveMangaList()
+    eyedroid.retrieveMangaList()
+    vaninou.retrieveMangaList()
+    blackjack.retrieveMangaList()
+
     User.toCSV(salixor, krocoh, phokopi, eyedroid, vaninou, blackjack)
     User.toTSV(salixor, krocoh, phokopi, eyedroid, vaninou, blackjack)

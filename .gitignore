@@ -1,4 +1,5 @@
 *_animelist
+*_mangalist
 *.csv
 *.tsv
 __pycache__

@@ -7,6 +7,8 @@ import urllib.request
 import xml.dom.minidom
 import xmltodict
 
+import sys
+
 import time
 import os
 import stat
@@ -29,30 +31,50 @@ class User:
         self.animes_scores = {}
 
 
-    """ Retrieve the anime list of a user """
-    def retrieveAnimeList(self, limit=15000000, status='all'):
-        if not self.checkAnimeList():
-            url = 'https://myanimelist.net/malappinfo.php?u=' + self.pseudo + '&status=all&type=anime'
+    """ Retrieve the work's list of a user given the type of work """
+    def retrieveWorkList(self, type, limit=15000000):
+        if type != "anime" and type != "manga":
+            sys.exit("Wrong work type")
+
+        filename = self.anime_filename if type == "anime" else self.manga_filename
+
+        if not self.checkWorkList(type):
+            url = 'https://myanimelist.net/malappinfo.php?u=' + self.pseudo + '&status=all&type=' + type
             xml_info = urllib.request.urlopen(url)
             content = xml_info.read()
             xml_info.close()
 
-            with open(self.anime_filename, 'bw') as file:
-                print("Saving anime list for user {}".format(self.pseudo))
-                file.write(content)
+            with open(filename, 'bw') as fd:
+                print("Saving {} list for user {}".format(type, self.pseudo))
+                fd.write(content)
 
-        with open(self.anime_filename, 'br') as animelist_file:
-            anime_list = xmltodict.parse(animelist_file.read())
+        with open(filename, 'br') as fd:
+            work_list = xmltodict.parse(fd.read())
 
-        for i in range(min(limit, len(anime_list["myanimelist"]["anime"]))):
-            anime = Anime(anime_list["myanimelist"]["anime"][i])
-            self.addWork(anime, anime_list["myanimelist"]["anime"][i])
+        if(len(work_list["myanimelist"]) <= 1):
+            print("Empty {} list for user {}".format(type, self.pseudo))
+        else:
+            for i in range(min(limit, len(work_list["myanimelist"][type]))):
+                if type == "anime":
+                    work = Anime(work_list["myanimelist"][type][i])
+                if type == "manga":
+                    work = Manga(work_list["myanimelist"][type][i])
+
+                self.addWork(work, work_list["myanimelist"][type][i])
+
+    def retrieveAnimeList(self, limit=999999):
+        self.retrieveWorkList("anime", limit)
+
+    def retrieveMangaList(self, limit=999999):
+        self.retrieveWorkList("manga", limit)
 
 
-    """ Check if a XML file corresponding to the anime list of the user exists """
-    def checkAnimeList(self):
-        if os.path.isfile(self.anime_filename):
-            if time.time() - os.stat(self.anime_filename)[stat.ST_MTIME] <= User.LIST_REFRESH_DELAY:
+    """ Check if a XML file corresponding to the work list of the user exists """
+    def checkWorkList(self, type):
+        filename = self.anime_filename if type == "anime" else self.manga_filename
+
+        if os.path.isfile(filename):
+            if time.time() - os.stat(filename)[stat.ST_MTIME] <= User.LIST_REFRESH_DELAY:
                 return True
         return False
 
