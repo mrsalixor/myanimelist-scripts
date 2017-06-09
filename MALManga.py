@@ -5,4 +5,4 @@ class Manga:
         super().__init__(**kwargs)
 
     def __str__(self):
-        print("Manga#{id} : {title}", id = self.id, title = self.title)
+        return "Manga#{} : {}".format(self.id, self.title)

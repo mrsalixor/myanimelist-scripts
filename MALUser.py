@@ -3,7 +3,9 @@ from MALManga import Manga
 
 import urllib.parse
 import urllib.request
+
 import xml.dom.minidom
+import xmltodict
 
 import time
 import os
@@ -29,26 +31,22 @@ class User:
 
     """ Retrieve the anime list of a user """
     def retrieveAnimeList(self, limit=15000000, status='all'):
-        if self.checkAnimeList():
-            xml_info = open(self.anime_filename, 'br').read()
-            anime_list = xml.dom.minidom.parseString(xml_info)
-        else:
+        if not self.checkAnimeList():
             url = 'https://myanimelist.net/malappinfo.php?u=' + self.pseudo + '&status=all&type=anime'
             xml_info = urllib.request.urlopen(url)
-            anime_list = xml.dom.minidom.parse(xml_info)
+            content = xml_info.read()
+            xml_info.close()
 
             with open(self.anime_filename, 'bw') as file:
                 print("Saving anime list for user {}".format(self.pseudo))
-                file.write(anime_list.toxml().encode("utf-8"))
+                file.write(content)
 
-            xml_info.close()
+        with open(self.anime_filename, 'br') as animelist_file:
+            anime_list = xmltodict.parse(animelist_file.read())
 
-        anime_infos = anime_list.getElementsByTagName("anime")
-
-        for i in range(min(limit, len(anime_infos))):
-            anime = User.handleAnime(anime_infos[i])
-            if not anime is None:
-                self.addWork(anime, anime_infos[i])
+        for i in range(min(limit, len(anime_list["myanimelist"]["anime"]))):
+            anime = Anime(anime_list["myanimelist"]["anime"][i])
+            self.addWork(anime, anime_list["myanimelist"]["anime"][i])
 
 
     """ Check if a XML file corresponding to the anime list of the user exists """
@@ -59,16 +57,6 @@ class User:
         return False
 
 
-    """ Return a new anime based on the info provided """
-    def handleAnime(anime_info):
-        anime = Anime()
-        anime.id = getText(anime_info.getElementsByTagName("series_animedb_id")[0].childNodes)
-        anime.title = getText(anime_info.getElementsByTagName("series_title")[0].childNodes)
-        anime.poster = getText(anime_info.getElementsByTagName("series_image")[0].childNodes)
-
-        return anime
-
-
     """ Add a work to the user's list of animes or mangas """
     def addWork(self, work, work_info):
         if type(work) is Anime:
@@ -76,11 +64,11 @@ class User:
         elif type(work) is Manga:
             self.mangas.add(work)
         else:
-            print("erreur")
+            print("Error while adding work to {}'s list'".format(self.pseudo))
 
         # TODO: make this more generic
-        self.animes_watch_statuses[work] = getText(work_info.getElementsByTagName("my_status")[0].childNodes)
-        self.animes_scores[work] = getText(work_info.getElementsByTagName("my_score")[0].childNodes)
+        self.animes_watch_statuses[work] = work_info["my_status"]
+        self.animes_scores[work] = work_info["my_score"]
 
 
     """ Return the list of shared animes between at least two users """
@@ -153,13 +141,3 @@ class User:
     """ Save shared animes of multiple users to a .tsv file """
     def toTSV(*users, destination = 'shared_anime_grid.tsv'):
         User.toCSV(*users, destination = destination, filetype = 'TSV')
-
-
-
-
-def getText(nodelist):
-    rc = ""
-    for node in nodelist:
-        if node.nodeType == node.TEXT_NODE:
-            rc = rc + node.data
-    return rc
