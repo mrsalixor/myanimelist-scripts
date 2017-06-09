@@ -1,4 +1,6 @@
 from MALAnime import Anime
+from MALManga import Manga
+
 import urllib.parse
 import urllib.request
 import xml.dom.minidom
@@ -14,8 +16,12 @@ class User:
 
     def __init__(self, pseudo):
         self.pseudo = pseudo
+
         self.animes = set()
+        self.mangas = set()
+
         self.anime_filename = self.pseudo + '_animelist'
+        self.manga_filename = self.pseudo + '_mangalist'
 
         self.animes_watch_statuses = {}
         self.animes_scores = {}
@@ -42,7 +48,7 @@ class User:
         for i in range(min(limit, len(anime_infos))):
             anime = User.handleAnime(anime_infos[i])
             if not anime is None:
-                self.addAnime(anime, anime_infos[i])
+                self.addWork(anime, anime_infos[i])
 
 
     """ Check if a XML file corresponding to the anime list of the user exists """
@@ -55,21 +61,26 @@ class User:
 
     """ Return a new anime based on the info provided """
     def handleAnime(anime_info):
-        #if(getText(anime_info.getElementsByTagName("my_status")[0].childNodes) != '6'):
         anime = Anime()
         anime.id = getText(anime_info.getElementsByTagName("series_animedb_id")[0].childNodes)
         anime.title = getText(anime_info.getElementsByTagName("series_title")[0].childNodes)
         anime.poster = getText(anime_info.getElementsByTagName("series_image")[0].childNodes)
 
         return anime
-        #return None
 
 
-    """ Add an anime to the user's list of animes """
-    def addAnime(self, anime, anime_info):
-        self.animes.add(anime)
-        self.animes_watch_statuses[anime] = getText(anime_info.getElementsByTagName("my_status")[0].childNodes)
-        self.animes_scores[anime] = getText(anime_info.getElementsByTagName("my_score")[0].childNodes)
+    """ Add a work to the user's list of animes or mangas """
+    def addWork(self, work, work_info):
+        if type(work) is Anime:
+            self.animes.add(work)
+        elif type(work) is Manga:
+            self.mangas.add(work)
+        else:
+            print("erreur")
+
+        # TODO: make this more generic
+        self.animes_watch_statuses[work] = getText(work_info.getElementsByTagName("my_status")[0].childNodes)
+        self.animes_scores[work] = getText(work_info.getElementsByTagName("my_score")[0].childNodes)
 
 
     """ Return the list of shared animes between at least two users """
