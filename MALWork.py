@@ -3,6 +3,7 @@ class Work:
         self._id = kwargs.get("id")
         self._title = kwargs.get("title")
         self._poster = kwargs.get("poster")
+        self._type = kwargs.get("type")
 
 
     """ Test of equality between two Works """
@@ -19,7 +20,13 @@ class Work:
         result += 31 * int(self._id)
         result += 31 * hash(self._title)
         result += 31 * hash(self._poster)
+        result += 31 * hash(self._type)
         return result
+
+
+    """ Return the type of work (ONA, Movie, LN ...) in a readable format """
+    def workType(self):
+        return ""
 
 
     """ Work id """
@@ -62,3 +69,17 @@ class Work:
     @poster.deleter
     def poster(self):
         del self._poster
+
+
+    """ Work type """
+    @property
+    def type(self):
+        return self._type
+
+    @type.setter
+    def type(self, type):
+        self._type = type
+
+    @type.deleter
+    def type(self):
+        del self._type

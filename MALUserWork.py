@@ -12,4 +12,8 @@ class UserWork(Work):
         result += 31 * int(self.work.id)
         result += 31 * hash(self.work.title)
         result += 31 * hash(self.work.poster)
+        result += 31 * hash(self.work.type)
+        result += 31 * hash(self.user_score)
+        result += 31 * hash(self.user_status)
+        
         return result

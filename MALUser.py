@@ -129,7 +129,7 @@ class User:
             with open(destination, 'ba') as f:
                 for id, work in joined_works.items(): # Iterate over works
                     if (worktype == 'anime' and type(work) is Anime) or (worktype == 'manga' and type(work) is Manga): # Type is correct
-                        row = work.title
+                        row = work.title + " [" + work.workType() + "]"
 
                         for user in users: # Iterate over users
                             row += delimiter
