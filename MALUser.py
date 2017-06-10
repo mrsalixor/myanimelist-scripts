@@ -1,5 +1,6 @@
 from MALAnime import Anime
 from MALManga import Manga
+from MALUserWork import UserWork
 
 import urllib.parse
 import urllib.request
@@ -21,14 +22,10 @@ class User:
     def __init__(self, pseudo):
         self.pseudo = pseudo
 
-        self.animes = set()
-        self.mangas = set()
+        self.works = {}
 
         self.anime_filename = self.pseudo + '_animelist'
         self.manga_filename = self.pseudo + '_mangalist'
-
-        self.animes_watch_statuses = {}
-        self.animes_scores = {}
 
 
     """ Retrieve the work's list of a user given the type of work """
@@ -60,7 +57,11 @@ class User:
                 if type == "manga":
                     work = Manga(work_list["myanimelist"][type][i])
 
-                self.addWork(work, work_list["myanimelist"][type][i])
+                score = work_list["myanimelist"][type][i]["my_score"]
+                status = work_list["myanimelist"][type][i]["my_status"]
+                user_work = UserWork(work, score, status)
+
+                self.works[work.id] = user_work
 
     def retrieveAnimeList(self, limit=999999):
         self.retrieveWorkList("anime", limit)
@@ -79,53 +80,41 @@ class User:
         return False
 
 
-    """ Add a work to the user's list of animes or mangas """
-    def addWork(self, work, work_info):
-        if type(work) is Anime:
-            self.animes.add(work)
-        elif type(work) is Manga:
-            self.mangas.add(work)
-        else:
-            print("Error while adding work to {}'s list'".format(self.pseudo))
-
-        # TODO: make this more generic
-        self.animes_watch_statuses[work] = work_info["my_status"]
-        self.animes_scores[work] = work_info["my_score"]
+    """ Return the list of shared works between at least two users """
+    # def sharedWorks(*users):
+    #     if(len(users) >= 2):
+    #         work_keys = list(users[0].works.keys())
+    #         for user in users:
+    #             work_keys = [list(filter(lambda x: x in work_keys, sublist)) for sublist in list(user.works.keys())]
+    #         return {k: adict[k] for k in work_keys if k in adict}
+    #     else:
+    #         print("Not enough users were provided (2 required)")
+    #         return set()
 
 
-    """ Return the list of shared animes between at least two users """
-    def sharedAnime(*users):
+    """ Return the list of works found between multiple users """
+    def joinedWorks(*users):
         if(len(users) >= 2):
-            anime_intersect = users[0].animes
+            work_union = {k: work.work for k, work in users[0].works.items()}
             for user in users:
-                anime_intersect = anime_intersect & user.animes
-            return anime_intersect
+                curr_works = {k: work.work for k, work in user.works.items()}
+                work_union.update(curr_works)
+            return work_union
         else:
             print("Not enough users were provided (2 required)")
             return set()
 
 
-    """ Return the list of animes found between multiple users """
-    def unionAnime(*users):
-        if(len(users) >= 2):
-            anime_union = users[0].animes
-            for user in users:
-                anime_union = anime_union | user.animes
-            return anime_union
-        else:
-            print("Not enough users were provided (2 required)")
-            return set()
-
-
-    """ Save shared animes of multiple users to a .csv file """
-    def toCSV(*users, destination = 'shared_anime_grid.csv', filetype = 'CSV'):
+    """ Save shared works of multiple users to a .csv file """
+    def toCSV(*users, destination = 'shared_works.csv', filetype = 'CSV', worktype='anime'):
         if filetype == 'TSV':
             delimiter = '\t'
         else:
             delimiter = '|'
 
         if(len(users) >= 2):
-            union_anime = User.unionAnime(*users)
+            joined_works = User.joinedWorks(*users)
+
             pseudos = [user.pseudo for user in users]
             pseudos.insert(0, '')
 
@@ -133,33 +122,34 @@ class User:
             for pseudo in pseudos[2:]:
                 pseudos_string += ", " + pseudo
 
-
             with open(destination, 'w') as f:
                 writer = csv.writer(f, delimiter=delimiter)
                 writer.writerow(pseudos)
 
             with open(destination, 'ba') as f:
-                for anime in union_anime: # Iterate over animes
-                    row = anime.title
-                    for user in users: # Iterate over users
-                        row += delimiter
+                for id, work in joined_works.items(): # Iterate over works
+                    if (worktype == 'anime' and type(work) is Anime) or (worktype == 'manga' and type(work) is Manga): # Type is correct
+                        row = work.title
 
-                        if anime in user.animes:
-                            if user.animes_watch_statuses[anime] == '1' or user.animes_watch_statuses[anime] == '2':
-                                row += str(user.animes_scores[anime])
-                            elif user.animes_watch_statuses[anime] == '6':
-                                row += 'P'
-                            else:
-                                row += 'X'
+                        for user in users: # Iterate over users
+                            row += delimiter
 
-                    row += '\n'
-                    f.write(row.encode("utf-8"))
+                            if id in set(work_id for work_id in user.works.keys()):
+                                if user.works[work.id].user_status == '1' or user.works[work.id].user_status == '2':
+                                    row += str(user.works[work.id].user_score)
+                                elif user.works[work.id].user_status == '6':
+                                    row += 'P'
+                                else:
+                                    row += 'X'
+
+                        row += '\n'
+                        f.write(row.encode("utf-8"))
 
             print("The {} file for users {} was generated".format(filetype, pseudos_string))
         else:
             print("Not enough users were provided (2 required)")
 
 
-    """ Save shared animes of multiple users to a .tsv file """
-    def toTSV(*users, destination = 'shared_anime_grid.tsv'):
-        User.toCSV(*users, destination = destination, filetype = 'TSV')
+    """ Save shared works of multiple users to a .tsv file """
+    def toTSV(*users, destination = 'shared_works.tsv', worktype='anime'):
+        User.toCSV(*users, destination = destination, filetype = 'TSV', worktype=worktype)
