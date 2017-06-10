@@ -61,7 +61,7 @@ class User:
                 status = work_list["myanimelist"][type][i]["my_status"]
                 user_work = UserWork(work, score, status)
 
-                self.works[work.id] = user_work
+                self.works[(work.id, type)] = user_work
 
     def retrieveAnimeList(self, limit=999999):
         self.retrieveWorkList("anime", limit)
@@ -135,9 +135,9 @@ class User:
                             row += delimiter
 
                             if id in set(work_id for work_id in user.works.keys()):
-                                if user.works[work.id].user_status == '1' or user.works[work.id].user_status == '2':
-                                    row += str(user.works[work.id].user_score)
-                                elif user.works[work.id].user_status == '6':
+                                if user.works[(work.id, worktype)].user_status == '1' or user.works[(work.id, worktype)].user_status == '2':
+                                    row += str(user.works[(work.id, worktype)].user_score)
+                                elif user.works[(work.id, worktype)].user_status == '6':
                                     row += 'P'
                                 else:
                                     row += 'X'
@@ -145,7 +145,7 @@ class User:
                         row += '\n'
                         f.write(row.encode("utf-8"))
 
-            print("The {} file for users {} was generated".format(filetype, pseudos_string))
+            print("The {} {} file for users {} was generated".format(worktype, filetype, pseudos_string))
         else:
             print("Not enough users were provided (2 required)")
 

@@ -22,5 +22,5 @@ if __name__ == '__main__':
     vaninou.retrieveMangaList()
     blackjack.retrieveMangaList()
 
-    User.toCSV(salixor, krocoh, phokopi, eyedroid, vaninou, blackjack)
-    User.toTSV(salixor, krocoh, phokopi, eyedroid, vaninou, blackjack)
+    User.toTSV(salixor, krocoh, phokopi, eyedroid, vaninou, blackjack, destination = 'shared_works_anime.tsv')
+    User.toTSV(salixor, krocoh, phokopi, eyedroid, vaninou, blackjack, destination = 'shared_works_manga.tsv', worktype="manga")
