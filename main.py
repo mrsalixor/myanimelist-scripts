@@ -24,3 +24,6 @@ if __name__ == '__main__':
 
     User.toTSV(salixor, krocoh, phokopi, eyedroid, vaninou, blackjack, destination = 'shared_works_anime.tsv')
     User.toTSV(salixor, krocoh, phokopi, eyedroid, vaninou, blackjack, destination = 'shared_works_manga.tsv', worktype="manga")
+
+    User.toCSV(salixor, krocoh, phokopi, eyedroid, vaninou, blackjack, destination = 'shared_works_anime.csv')
+    User.toCSV(salixor, krocoh, phokopi, eyedroid, vaninou, blackjack, destination = 'shared_works_manga.csv', worktype="manga")

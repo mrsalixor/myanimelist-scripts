@@ -116,10 +116,9 @@ class User:
             joined_works = User.joinedWorks(*users)
 
             pseudos = [user.pseudo for user in users]
-            pseudos.insert(0, '')
 
-            pseudos_string = pseudos[1]
-            for pseudo in pseudos[2:]:
+            pseudos_string = pseudos[0]
+            for pseudo in pseudos[1:]:
                 pseudos_string += ", " + pseudo
 
             with open(destination, 'w') as f:
@@ -129,7 +128,7 @@ class User:
             with open(destination, 'ba') as f:
                 for id, work in joined_works.items(): # Iterate over works
                     if (worktype == 'anime' and type(work) is Anime) or (worktype == 'manga' and type(work) is Manga): # Type is correct
-                        row = work.title + " [" + work.workType() + "]"
+                        row = work.id + delimiter + work.title + delimiter + work.workType() + delimiter + work.poster
 
                         for user in users: # Iterate over users
                             row += delimiter
@@ -137,10 +136,12 @@ class User:
                             if id in set(work_id for work_id in user.works.keys()):
                                 if user.works[(work.id, worktype)].user_status == '1' or user.works[(work.id, worktype)].user_status == '2':
                                     row += str(user.works[(work.id, worktype)].user_score)
-                                elif user.works[(work.id, worktype)].user_status == '6':
-                                    row += 'P'
+                                elif user.works[(work.id, worktype)].user_status == '3':
+                                    row += 'O' # On-hold
+                                elif user.works[(work.id, worktype)].user_status == '4':
+                                    row += 'D' # Dropped
                                 else:
-                                    row += 'X'
+                                    row += 'P' # Plan to watch
 
                         row += '\n'
                         f.write(row.encode("utf-8"))
