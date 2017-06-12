@@ -48,6 +48,8 @@ class User:
         with open(filename, 'br') as fd:
             work_list = xmltodict.parse(fd.read())
 
+        self.pseudo = work_list["myanimelist"]["myinfo"]["user_name"]
+        
         if(len(work_list["myanimelist"]) <= 1):
             print("Empty {} list for user {}".format(type, self.pseudo))
         else:
@@ -106,7 +108,7 @@ class User:
 
 
     """ Save shared works of multiple users to a .csv file """
-    def toCSV(*users, destination = 'shared_works.csv', filetype = 'CSV', worktype='anime'):
+    def toCSV(users, destination = 'shared_works.csv', filetype = 'CSV', worktype='anime'):
         if filetype == 'TSV':
             delimiter = '\t'
         else:
