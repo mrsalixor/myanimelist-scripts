@@ -5,6 +5,12 @@ import csv
 import urllib.request
 import codecs
 
+from PIL import Image
+
+import requests
+from io import BytesIO
+from base64 import b16encode
+
 client = discord.Client()
 
 @client.event
@@ -30,7 +36,7 @@ async def on_message(message):
         message_split = message.content.split(" ", 1)
 
         if len(message_split) <= 1:
-            await client.send_message(message.channel, 'Please type `!{}_stats <id>`.'.format(worktype))
+            await client.send_message(message.channel, 'Please type `!{}_stats <id/title>`.'.format(worktype))
         else:
             search = message_split[1].strip()
             search_id = 0
@@ -56,18 +62,20 @@ async def on_message(message):
                     id = int(line[0])
                     title = line[1]
 
-                    if id == search_id or (search_title != "" and title.lower().startswith(search_title.lower())):
+                    if id == search_id or title.lower() == search_title.lower():
+                        lines_match = [line]
+                    elif search_title != "" and title.lower().startswith(search_title.lower()):
                         lines_match.append(line)
 
             # Under this line, we no longer care about the type of search
-            print(lines_match, flush=True)
             if len(lines_match) == 1:
                 id = lines_match[0][0]
                 title = lines_match[0][1]
                 poster_url = lines_match[0][3]
                 mal_url = "https://myanimelist.net/{}/{}".format(worktype, id)
+                color = get_main_color(poster_url)
 
-                result = discord.Embed(title=title, url=mal_url, color=0xf7ed3b)
+                result = discord.Embed(title=title, url=mal_url, color=color)
                 result.set_footer(text=worktype.capitalize(), icon_url="https://myanimelist.cdn-dena.com/img/sp/icon/apple-touch-icon-256.png")
                 result.set_thumbnail(url=poster_url)
 
@@ -101,7 +109,22 @@ async def on_message(message):
 
                 await client.send_message(message.channel, embed=result)
             else:
-                await client.send_message(message.channel, 'No such {} was found.'.format(worktype))
+                await client.send_message(message.channel, 'No such {} was found for those users.'.format(worktype))
+
+
+def get_main_color(url):
+    response = requests.get(url)
+    img = Image.open(BytesIO(response.content))
+    colors = img.getcolors(72000)
+    max_occurence, most_present = 0, 0
+    try:
+        for c in colors:
+            if c[0] > max_occurence:
+                (max_occurence, most_present) = c
+        r, g, b = most_present
+        return int('0x%02x%02x%02x' % (r, g, b), 16)
+    except TypeError:
+        raise Exception("Too many colors in the image")
 
 
 client.run('MzIzMjExNTQzNzQxNDY0NTc4.DB34RA.bdVDgEe9KXHKiBhwoRoYtojfHGY')
