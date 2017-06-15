@@ -1,5 +1,11 @@
-*_animelist
+__pycache__
+
+mangalists/
 *_mangalist
+
+animelists/
+*_animelist
+
+csvfiles/
 *.csv
 *.tsv
-__pycache__

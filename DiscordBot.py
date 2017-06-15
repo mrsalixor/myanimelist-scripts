@@ -4,6 +4,7 @@ import asyncio
 import csv
 import urllib.request
 import codecs
+import os
 
 from PIL import Image
 
@@ -37,8 +38,9 @@ async def on_message(message):
 
         message_split = message.content.split(" ", 2)
 
-        if len(message_split) <= 2:
-            await client.send_message(message.channel, 'Please type `!{}_stats <user1,...,userN> <id/title>`.'.format(worktype))
+        if len(message_split) != 3:
+            msg = '{0.author.mention}, please type `!{1}_stats <user1,...,userN> <id/title>`.'.format(message, worktype)
+            await client.send_message(message.channel, msg)
             return
 
         search = message_split[2].strip()
@@ -50,33 +52,43 @@ async def on_message(message):
         else:
             search_id = int(search)
 
+        # for personal use
+        if message_split[1].lower() == "baka1a":
+            usernames = ["mrsalixor", "vanorc", "phokopi", "eyedroid", "blackjack_21", "krocoh"]
         # Retrieve the usernames
-        usernames = list(set(message_split[1].lower().split(",")))
-        if len(usernames) <= 1:
-            await client.send_message(message.channel, 'Please provide more than one username')
-            return
         else:
-            if len(usernames) >= 20:
-                usernames = usernames[:20]
+            usernames = list(set(message_split[1].lower().split(",")))
 
-            tmp = await client.send_message(message.channel, 'Currently processing data ...')
-            users = []
-            for username in usernames:
-                user = User(username)
-                if worktype == 'anime':
-                    user.retrieveAnimeList()
-                elif worktype == 'manga':
-                    user.retrieveMangaList()
-                else:
-                    return
-                users.append(user)
+        # Retrieve the useful data
+        if len(usernames) >= 20:
+            usernames = usernames[:20]
 
-        csv_filename = '_'.join(usernames+["anime"]) + ".csv"
-        User.toCSV(users, destination=csv_filename)
+        # Temporary message while working the request
+        msg = '{0.author.mention}, your request is being processed, please be patient !'.format(message)
+        tmp = await client.send_message(message.channel, msg)
+
+        users = []
+        for username in usernames:
+            user = User(username)
+            if worktype == 'anime':
+                user.retrieveAnimeList()
+            elif worktype == 'manga':
+                user.retrieveMangaList()
+            else:
+                return
+            users.append(user)
+
+        path = "csvfiles"
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        filename = '_'.join(usernames+[worktype]) + ".csv"
+        filename = os.path.join(path, filename)
+
+        User.toCSV(users, destination=filename, worktype=worktype)
 
         lines_match = []
         # Retrieval of the .csv file
-        with open(csv_filename, 'r') as f:
+        with open(filename, 'r') as f:
             csvfile = csv.reader(f, delimiter='|')
 
             # Let's find the anime that has the id or title provided in the query
@@ -126,16 +138,19 @@ async def on_message(message):
                 else:
                     result.add_field(name=pseudo, value="Not in list")
 
-            await client.edit_message(tmp, "Here are the results for your request : ", embed=result)
+            msg = '{0.author.mention}, here are the results for your request : '.format(message)
+            await client.edit_message(tmp, msg, embed=result)
         elif len(lines_match) > 1:
             description = ""
             for line in lines_match:
                 description += line[1] + "\n"
             result = discord.Embed(title="Conflicting titles", description=description, color=0xf7ed3b)
 
-            await client.edit_message(tmp, 'Your research provided more than one result. Try once again with the exact title :', embed=result)
+            msg = '{0.author.mention}, your research provided more than one result. Try once again with the exact title :'.format(message)
+            await client.edit_message(tmp, msg, embed=result)
         else:
-            await client.edit_message(tmp, 'No such {} was found for those users.'.format(worktype))
+            msg = '{0.author.mention}, no such {1} was found for those users.'.format(message, worktype)
+            await client.edit_message(tmp, msg)
 
 
 def get_main_color(url):

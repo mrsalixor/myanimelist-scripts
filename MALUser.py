@@ -24,8 +24,13 @@ class User:
 
         self.works = {}
 
-        self.anime_filename = self.pseudo + '_animelist'
-        self.manga_filename = self.pseudo + '_mangalist'
+        path = "animelists"
+        if not os.path.isdir(path): os.makedirs(path)
+        self.anime_filename = os.path.join(path, self.pseudo + '_animelist')
+
+        path = "mangalists"
+        if not os.path.isdir(path): os.makedirs(path)
+        self.manga_filename = os.path.join(path, self.pseudo + '_mangalist')
 
 
     """ Retrieve the work's list of a user given the type of work """
@@ -49,7 +54,7 @@ class User:
             work_list = xmltodict.parse(fd.read())
 
         self.pseudo = work_list["myanimelist"]["myinfo"]["user_name"]
-        
+
         if(len(work_list["myanimelist"]) <= 1):
             print("Empty {} list for user {}".format(type, self.pseudo))
         else:
