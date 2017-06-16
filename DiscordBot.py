@@ -5,6 +5,9 @@ import csv
 import urllib.request
 import codecs
 import os
+import sys
+import time
+import stat
 
 from PIL import Image
 
@@ -18,15 +21,22 @@ client = discord.Client()
 
 @client.event
 async def on_ready():
-    print('Logged in as', flush=True)
-    print(client.user.name, flush=True)
-    print(client.user.id, flush=True)
-    print('------', flush=True)
+    print('---------------------------------', flush=True)
+    print('Logged in as : {}'.format(client.user.name), flush=True)
+    print('Client ID : {}'.format(client.user.id), flush=True)
+    print('---------------------------------', flush=True)
+
+    await client.change_presence(game=discord.Game(name='!help'))
 
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
+
+    if message.content.lower().startswith('!help'):
+        msg = "```!anime_stats <user1,...,userN> <id/title> : scores and statuses of users for a given anime\n"
+        msg += "!manga_stats <user1,...,userN> <id/title> : scores and statuses of users for a given manga```"
+        await client.send_message(message.channel, msg)
 
     if message.content.lower().startswith('!anime_stats') or message.content.lower().startswith('!manga_stats'):
         if message.content.lower().startswith('!anime_stats'):
@@ -52,11 +62,15 @@ async def on_message(message):
         else:
             search_id = int(search)
 
-        # for personal use
-        if message_split[1].lower() == "baka1a":
-            usernames = ["mrsalixor", "vanorc", "phokopi", "eyedroid", "blackjack_21", "krocoh"]
-        # Retrieve the usernames
-        else:
+        # Check for custom aliases
+        with open('aliases', 'r') as f:
+            for line in f:
+                linesplit = line.split("=", 1)
+                if message_split[1].lower() == linesplit[0]:
+                    usernames = linesplit[1].rstrip().split(",")
+
+        # If the command does not correspond to an alias, it's a list
+        if usernames == []:
             usernames = list(set(message_split[1].lower().split(",")))
 
         # Retrieve the useful data
@@ -84,11 +98,14 @@ async def on_message(message):
         filename = '_'.join(usernames+[worktype]) + ".csv"
         filename = os.path.join(path, filename)
 
-        User.toCSV(users, destination=filename, worktype=worktype)
+        # Create the CSV file if it hasn't been updated in an hour
+        if os.path.isfile(filename):
+            if time.time() - os.stat(filename)[stat.ST_MTIME] > 3600:
+                User.toCSV(users, destination=filename, worktype=worktype)
 
         lines_match = []
         # Retrieval of the .csv file
-        with open(filename, 'r') as f:
+        with codecs.open(filename, 'r', "utf-8") as f:
             csvfile = csv.reader(f, delimiter='|')
 
             # Let's find the anime that has the id or title provided in the query
@@ -168,4 +185,13 @@ def get_main_color(url):
         raise Exception("Too many colors in the image")
 
 
-client.run('MzIzMjExNTQzNzQxNDY0NTc4.DB34RA.bdVDgEe9KXHKiBhwoRoYtojfHGY')
+# Let's start the bot
+with open('app.settings', 'r') as f:
+    for line in f:
+        if line.startswith("token="):
+            token = line.split("=", 1)[1]
+
+if token != "":
+    client.run(token.rstrip())
+else:
+    sys.exit("No token was provided.")

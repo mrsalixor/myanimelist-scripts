@@ -10,3 +10,5 @@ csvfiles/
 *.csv
 *.tsv
 *.php
+*.settings
+aliases
