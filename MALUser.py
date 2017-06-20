@@ -46,9 +46,13 @@ class User:
             content = xml_info.read()
             xml_info.close()
 
-            with open(filename, 'bw') as fd:
-                print("Saving {} list for user {}".format(type, self.pseudo))
-                fd.write(content)
+            if(content == b'<?xml version="1.0" encoding="UTF-8" ?><myanimelist></myanimelist>'):
+                print("The user {} does not seem to exist".format(self.pseudo))
+                return -1
+            else:
+                with open(filename, 'bw') as fd:
+                    print("Saving {} list for user {}".format(type, self.pseudo))
+                    fd.write(content)
 
         with open(filename, 'br') as fd:
             work_list = xmltodict.parse(fd.read())
@@ -57,6 +61,7 @@ class User:
 
         if(len(work_list["myanimelist"]) <= 1):
             print("Empty {} list for user {}".format(type, self.pseudo))
+            return -2
         else:
             for i in range(min(limit, len(work_list["myanimelist"][type]))):
                 if type == "anime":
@@ -70,11 +75,13 @@ class User:
 
                 self.works[(work.id, type)] = user_work
 
+        return 0
+
     def retrieveAnimeList(self, limit=999999):
-        self.retrieveWorkList("anime", limit)
+        return self.retrieveWorkList("anime", limit)
 
     def retrieveMangaList(self, limit=999999):
-        self.retrieveWorkList("manga", limit)
+        return self.retrieveWorkList("manga", limit)
 
 
     """ Check if a XML file corresponding to the work list of the user exists """

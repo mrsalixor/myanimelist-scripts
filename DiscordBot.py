@@ -3,7 +3,6 @@ import asyncio
 
 import csv
 import urllib.request
-import codecs
 import os
 import sys
 import time
@@ -62,6 +61,7 @@ async def on_message(message):
         else:
             search_id = int(search)
 
+        usernames = []
         # Check for custom aliases
         with open('aliases', 'r') as f:
             for line in f:
@@ -85,10 +85,18 @@ async def on_message(message):
         for username in usernames:
             user = User(username)
             if worktype == 'anime':
-                user.retrieveAnimeList()
+                if user.retrieveAnimeList() < 0:
+                    msg = '{0.author.mention}, one of the users does not seem to exist.'.format(message)
+                    await client.edit_message(tmp, msg)
+                    return
             elif worktype == 'manga':
-                user.retrieveMangaList()
+                if user.retrieveMangaList() < 0:
+                    msg = '{0.author.mention}, one of the users does not seem to exist.'.format(message)
+                    await client.edit_message(tmp, msg)
+                    return
             else:
+                msg = '{0.author.mention}, something went wrong.'.format(message)
+                await client.edit_message(tmp, msg)
                 return
             users.append(user)
 
@@ -99,13 +107,15 @@ async def on_message(message):
         filename = os.path.join(path, filename)
 
         # Create the CSV file if it hasn't been updated in an hour
-        if os.path.isfile(filename):
+        if not os.path.isfile(filename):
+            User.toCSV(users, destination=filename, worktype=worktype)
+        else:
             if time.time() - os.stat(filename)[stat.ST_MTIME] > 3600:
                 User.toCSV(users, destination=filename, worktype=worktype)
 
         lines_match = []
         # Retrieval of the .csv file
-        with codecs.open(filename, 'r', "utf-8") as f:
+        with open(filename, 'r', encoding='utf-8') as f:
             csvfile = csv.reader(f, delimiter='|')
 
             # Let's find the anime that has the id or title provided in the query
