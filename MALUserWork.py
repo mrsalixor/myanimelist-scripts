@@ -7,13 +7,17 @@ class UserWork(Work):
         self.user_score = score
         self.user_status = status
 
+
+    """ Test of equality between two UserWorks """
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        return False
+
     def __hash__(self):
         result = 17
-        result += 31 * int(self.work.id)
-        result += 31 * hash(self.work.title)
-        result += 31 * hash(self.work.poster)
-        result += 31 * hash(self.work.type)
+        result += 31 * self.work.__hash__()
         result += 31 * hash(self.user_score)
         result += 31 * hash(self.user_status)
-        
+
         return result

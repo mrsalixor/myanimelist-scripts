@@ -5,16 +5,43 @@ class Manga(Work):
     MANGA_TYPES = {0: "Unknown", 1: "Manga", 2: "Light Novel", 3: "One-shot", 5: "Manhwa"}
 
     def __init__(self, manga_info_fromuserlist):
-        # Initialize from a user's XML manga list
-        id = manga_info_fromuserlist["series_mangadb_id"]
-        title = manga_info_fromuserlist["series_title"]
-        poster = manga_info_fromuserlist["series_image"]
-        type = int(manga_info_fromuserlist["series_type"])
+        id = int(manga_info_fromuserlist["series_mangadb_id"])
+        super().__init__(manga_info_fromuserlist, id = id)
 
-        super().__init__(id = id, title = title, poster = poster, type = type)
+        self._chapters = manga_info_fromuserlist["series_chapters"]
+        self._volumes = manga_info_fromuserlist["series_volumes"]
+
 
     def __str__(self):
         return "Manga#{} : {}".format(self.id, self.title)
 
     def workType(self):
         return self.MANGA_TYPES[self.type]
+
+
+    """ Number of chapters of a manga """
+    @property
+    def chapters(self):
+        return self._chapters
+
+    @chapters.setter
+    def chapters(self, chapters):
+        self._chapters = chapters
+
+    @chapters.deleter
+    def chapters(self):
+        del self._chapters
+
+
+    """ Number of volumes of a manga """
+    @property
+    def volumes(self):
+        return self._volumes
+
+    @volumes.setter
+    def volumes(self, volumes):
+        self._volumes = volumes
+
+    @volumes.deleter
+    def volumes(self):
+        del self._volumes

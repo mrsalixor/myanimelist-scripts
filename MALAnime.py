@@ -5,16 +5,28 @@ class Anime(Work):
     ANIME_TYPES = {0: "Unknown", 1: "TV", 2: "OVA", 3: "Movie", 4: "Special", 5: "ONA", 6: "Music"}
 
     def __init__(self, anime_info_fromuserlist):
-        # Initialize from a user's XML anime list
-        id = anime_info_fromuserlist["series_animedb_id"]
-        title = anime_info_fromuserlist["series_title"]
-        poster = anime_info_fromuserlist["series_image"]
-        type = int(anime_info_fromuserlist["series_type"])
+        id = int(anime_info_fromuserlist["series_animedb_id"])
+        super().__init__(anime_info_fromuserlist, id = id)
 
-        super().__init__(id = id, title = title, poster = poster, type = type)
+        self._episodes = anime_info_fromuserlist["series_episodes"]
+
 
     def __str__(self):
         return "Anime#{} : {}".format(self.id, self.title)
 
     def workType(self):
         return self.ANIME_TYPES[self.type]
+
+
+    """ Number of episodes of an anime """
+    @property
+    def episodes(self):
+        return self._episodes
+
+    @episodes.setter
+    def episodes(self, episodes):
+        self._episodes = episodes
+
+    @episodes.deleter
+    def episodes(self):
+        del self._episodes

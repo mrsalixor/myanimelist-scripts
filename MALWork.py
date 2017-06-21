@@ -1,9 +1,14 @@
 class Work:
-    def __init__(self, **kwargs):
+    def __init__(self, infos, **kwargs):
+        self._title = infos["series_title"]
+        self._alt_titles = infos["series_synonyms"]
+        self._type = int(infos["series_type"])
+        self._status = int(infos["series_status"])
+        self._series_start = infos["series_start"]
+        self._series_end = infos["series_end"]
+        self._poster = infos["series_image"]
+
         self._id = kwargs.get("id")
-        self._title = kwargs.get("title")
-        self._poster = kwargs.get("poster")
-        self._type = kwargs.get("type")
 
 
     """ Test of equality between two Works """
@@ -17,10 +22,14 @@ class Work:
 
     def __hash__(self):
         result = 17
-        result += 31 * int(self._id)
+        result += 31 * hash(self._id)
         result += 31 * hash(self._title)
-        result += 31 * hash(self._poster)
+        result += 31 * hash(self._alt_titles)
         result += 31 * hash(self._type)
+        result += 31 * hash(self._status)
+        result += 31 * hash(self._series_start)
+        result += 31 * hash(self._series_end)
+        result += 31 * hash(self._poster)
         return result
 
 
@@ -57,18 +66,18 @@ class Work:
         del self._title
 
 
-    """ Work poster """
+    """ Work alternative titles """
     @property
-    def poster(self):
-        return self._poster
+    def alt_titles(self):
+        return self._alt_titles
 
-    @poster.setter
-    def poster(self, poster):
-        self._poster = poster
+    @alt_titles.setter
+    def alt_titles(self, alt_titles):
+        self._alt_titles = alt_titles
 
-    @poster.deleter
-    def poster(self):
-        del self._poster
+    @alt_titles.deleter
+    def alt_titles(self):
+        del self._alt_titles
 
 
     """ Work type """
@@ -83,3 +92,59 @@ class Work:
     @type.deleter
     def type(self):
         del self._type
+
+
+    """ Work status """
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, status):
+        self._status = status
+
+    @status.deleter
+    def status(self):
+        del self._status
+
+
+    """ Work start date of publication / airing """
+    @property
+    def series_start(self):
+        return self._series_start
+
+    @series_start.setter
+    def series_start(self, series_start):
+        self._series_start = series_start
+
+    @series_start.deleter
+    def series_start(self):
+        del self._series_start
+
+
+    """ Work end date of publication / airing """
+    @property
+    def series_end(self):
+        return self._series_end
+
+    @series_end.setter
+    def series_end(self, series_end):
+        self._series_end = series_end
+
+    @series_end.deleter
+    def series_start(self):
+        del self._series_end
+
+
+    """ Work poster """
+    @property
+    def poster(self):
+        return self._poster
+
+    @poster.setter
+    def poster(self, poster):
+        self._poster = poster
+
+    @poster.deleter
+    def poster(self):
+        del self._poster

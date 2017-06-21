@@ -47,11 +47,11 @@ class User:
             xml_info.close()
 
             if(content == b'<?xml version="1.0" encoding="UTF-8" ?><myanimelist></myanimelist>'):
-                print("The user {} does not seem to exist".format(self.pseudo))
+                print("The user {} does not seem to exist".format(self.pseudo), flush=True)
                 return -1
             else:
                 with open(filename, 'bw') as fd:
-                    print("Saving {} list for user {}".format(type, self.pseudo))
+                    print("Saving {} list for user {}".format(type, self.pseudo), flush=True)
                     fd.write(content)
 
         with open(filename, 'br') as fd:
@@ -60,7 +60,7 @@ class User:
         self.pseudo = work_list["myanimelist"]["myinfo"]["user_name"]
 
         if(len(work_list["myanimelist"]) <= 1):
-            print("Empty {} list for user {}".format(type, self.pseudo))
+            print("Empty {} list for user {}".format(type, self.pseudo), flush=True)
             return -2
         else:
             for i in range(min(limit, len(work_list["myanimelist"][type]))):
@@ -94,18 +94,6 @@ class User:
         return False
 
 
-    """ Return the list of shared works between at least two users """
-    # def sharedWorks(*users):
-    #     if(len(users) >= 2):
-    #         work_keys = list(users[0].works.keys())
-    #         for user in users:
-    #             work_keys = [list(filter(lambda x: x in work_keys, sublist)) for sublist in list(user.works.keys())]
-    #         return {k: adict[k] for k in work_keys if k in adict}
-    #     else:
-    #         print("Not enough users were provided (2 required)")
-    #         return set()
-
-
     """ Return the list of works found between multiple users """
     def joinedWorks(*users):
         if(len(users) >= 2):
@@ -115,20 +103,16 @@ class User:
                 work_union.update(curr_works)
             return work_union
         else:
-            print("Not enough users were provided (2 required)")
+            print("Not enough users were provided (2 required)", flush=True)
             return set()
 
 
     """ Save shared works of multiple users to a .csv file """
     def toCSV(users, destination = 'shared_works.csv', filetype = 'CSV', worktype='anime'):
-        if filetype == 'TSV':
-            delimiter = '\t'
-        else:
-            delimiter = '|'
+        delimiter = '\t' if (filetype == 'TSV') else '|'
 
         if(len(users) >= 2):
             joined_works = User.joinedWorks(*users)
-
             pseudos = [user.pseudo for user in users]
 
             pseudos_string = pseudos[0]
@@ -140,19 +124,19 @@ class User:
                 writer.writerow(pseudos)
 
             with open(destination, 'ba') as f:
-                for id, work in joined_works.items(): # Iterate over works
+                for key, work in joined_works.items(): # Iterate over works
                     if (worktype == 'anime' and type(work) is Anime) or (worktype == 'manga' and type(work) is Manga): # Type is correct
-                        row = work.id + delimiter + work.title + delimiter + work.workType() + delimiter + work.poster
+                        row = str(work.id) + delimiter + work.title + delimiter + work.workType() + delimiter + work.poster
 
                         for user in users: # Iterate over users
                             row += delimiter
 
-                            if id in set(work_id for work_id in user.works.keys()):
-                                if user.works[(work.id, worktype)].user_status == '1' or user.works[(work.id, worktype)].user_status == '2':
-                                    row += str(user.works[(work.id, worktype)].user_score)
-                                elif user.works[(work.id, worktype)].user_status == '3':
+                            if key in set(work_key for work_key in user.works.keys()):
+                                if user.works[key].user_status == '1' or user.works[key].user_status == '2':
+                                    row += str(user.works[key].user_score)
+                                elif user.works[key].user_status == '3':
                                     row += 'O' # On-hold
-                                elif user.works[(work.id, worktype)].user_status == '4':
+                                elif user.works[key].user_status == '4':
                                     row += 'D' # Dropped
                                 else:
                                     row += 'P' # Plan to watch
@@ -160,9 +144,9 @@ class User:
                         row += '\n'
                         f.write(row.encode("utf-8"))
 
-            print("The {} {} file for users {} was generated".format(worktype, filetype, pseudos_string))
+            print("The {} {} file for users {} was generated".format(worktype, filetype, pseudos_string), flush=True)
         else:
-            print("Not enough users were provided (2 required)")
+            print("Not enough users were provided (2 required)", flush=True)
 
 
     """ Save shared works of multiple users to a .tsv file """
