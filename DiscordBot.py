@@ -78,19 +78,14 @@ async def on_message(message):
             usernames = usernames[:20]
 
         # Temporary message while working the request
-        msg = '{0.author.mention}, your request is being processed, please be patient !'.format(message)
+        msg = '{0.author.mention}, currently retrieving data from MyAnimeList. Please wait !'.format(message)
         tmp = await client.send_message(message.channel, msg)
 
         users = []
         for username in usernames:
             user = User(username)
-            if worktype == 'anime':
-                if user.retrieveAnimeList() < 0:
-                    msg = '{0.author.mention}, one of the users does not seem to exist.'.format(message)
-                    await client.edit_message(tmp, msg)
-                    return
-            elif worktype == 'manga':
-                if user.retrieveMangaList() < 0:
+            if worktype == 'anime' or worktype == 'manga':
+                if user.retrieveWorkList(worktype) < 0:
                     msg = '{0.author.mention}, one of the users does not seem to exist.'.format(message)
                     await client.edit_message(tmp, msg)
                     return
