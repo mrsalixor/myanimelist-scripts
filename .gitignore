@@ -12,3 +12,5 @@ csvfiles/
 *.php
 *.settings
 aliases
+
+custom.py

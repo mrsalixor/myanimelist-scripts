@@ -74,8 +74,8 @@ class User:
             if type == "manga":
                 work = Manga(work_list["myanimelist"][type][i])
 
-            score = work_list["myanimelist"][type][i]["my_score"]
-            status = work_list["myanimelist"][type][i]["my_status"]
+            score = int(work_list["myanimelist"][type][i]["my_score"])
+            status = int(work_list["myanimelist"][type][i]["my_status"])
 
             self.work_informations[work] = (score, status)
             self.works[(work.id, type)] = work
@@ -111,6 +111,66 @@ class User:
         return work_union
 
 
+    """ Return the list of works found between multiple users and the stats """
+    def joinedWorksWithStats(users, worktype, id = 0, title=""):
+        if len(users) < 2:
+            print("Not enough users were provided (2 required)", flush=True)
+            return {}
+
+        title = title.lower()
+        work_union = {}
+        already_found = False
+
+        for user in users:
+            for work in list(user.works.values()):
+                # If this work is not of the correct type, skip it
+                if (worktype == 'anime' and type(work) is Manga) or (worktype == 'manga' and type(work) is Anime):
+                    continue
+
+                # Split the alternative titles
+                alt_titles = []
+                if not work.alt_titles is None:
+                    alt_titles = work.alt_titles.split("; ")
+
+                # Filter by id
+                if id != 0 and id != work.id:
+                    continue
+
+                # Filter by title or alternative title
+                if title != "":
+                    found = False
+                    exact = False
+                    for alt_title in alt_titles:
+                        if alt_title != "":
+                            found = found or title in alt_title.lower()
+                            exact = exact or title == alt_title.lower()
+                    found = found or title in work.title.lower()
+                    exact = exact or title == work.title.lower()
+
+                    # If the title matches exactly, only keep this row
+                    if exact:
+                        already_found = True
+                        tmp = {}
+                        if work in work_union:
+                            tmp = work_union[work]
+                        work_union = {}
+                        work_union[work] = tmp
+                        work_union[work].update({user.pseudo.lower(): user.work_informations[work]})
+                        break
+
+                    # If the title does not match, we skip to the next work
+                    if not found:
+                        continue
+
+                # We add the work in our final list
+                if not already_found:
+                    if not work in work_union:
+                        work_union[work] = {}
+                    work_union[work].update({user.pseudo.lower(): user.work_informations[work]})
+
+        return work_union
+
+
     """ Save shared works of multiple users to a .csv file """
     def toCSV(users, destination = 'shared_works.csv', filetype = 'CSV', worktype='anime'):
         delimiter = '\t' if (filetype == 'TSV') else '|'
@@ -142,11 +202,11 @@ class User:
                 # Iterate over users and fill the CSV file
                 for user in users:
                     if work in list(user.works.values()):
-                        if user.work_informations[work][1] == '1' or user.work_informations[work][1] == '2':
+                        if user.work_informations[work][1] == 1 or user.work_informations[work][1] == 2:
                             row.append(user.work_informations[work][0])
-                        elif user.work_informations[work][1] == '3':
+                        elif user.work_informations[work][1] == 3:
                             row.append('O')
-                        elif user.work_informations[work][1] == '4':
+                        elif user.work_informations[work][1] == 4:
                             row.append('D')
                         else:
                             row.append('P')
