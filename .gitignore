@@ -6,6 +6,10 @@ mangalists/
 animelists/
 *_animelist
 
+anime_caches/
+manga_caches/
+*.json
+
 csvfiles/
 *.csv
 *.tsv

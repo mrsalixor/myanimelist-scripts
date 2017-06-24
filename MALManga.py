@@ -19,6 +19,29 @@ class Manga(Work):
         return self.MANGA_TYPES[self.type]
 
 
+    def retrieveFullInfo(self):
+        if self.id <= 0:
+            print("Manga ID can't be negative or zero.", flush=True)
+            return -1
+
+        url = 'http://jikan.me/api/manga/{}'.format(self.id)
+        os.makedirs('manga_caches', exist_ok=True)
+        cache_filename = os.path.join('manga_caches', 'manga_{}.json'.format(self.id))
+
+        self._data = Scrapper.retrieveJSONfromURL(url, destination=cache_filename)
+
+        if self._data == {}:
+            return -1
+        else:
+            return 1
+
+
+    """ Getter : full raw data for a manga """
+    @property
+    def data(self):
+        return self._data
+
+
     """ Number of chapters of a manga """
     @property
     def chapters(self):
