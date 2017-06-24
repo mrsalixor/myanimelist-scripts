@@ -36,12 +36,6 @@ class Manga(Work):
             return 1
 
 
-    """ Getter : full raw data for a manga """
-    @property
-    def data(self):
-        return self._data
-
-
     """ Number of chapters of a manga """
     @property
     def chapters(self):

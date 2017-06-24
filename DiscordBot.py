@@ -32,10 +32,61 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+
+
     if message.content.lower().startswith('!help'):
         msg = "```!anime_stats <user1,...,userN> <id/title> : scores and statuses of users for a given anime\n"
-        msg += "!manga_stats <user1,...,userN> <id/title> : scores and statuses of users for a given manga```"
+        msg += "!manga_stats <user1,...,userN> <id/title> : scores and statuses of users for a given manga\n"
+        msg += "!anime_favgenre <user> : favorite anime genres for an user\n"
+        msg += "!manga_favgenre <user> : favorite manga genres for an user```"
         await client.send_message(message.channel, msg)
+
+
+
+    if message.content.lower().startswith('!anime_favgenre') or message.content.lower().startswith('!manga_favgenre'):
+        if message.content.lower().startswith('!anime_favgenre'):
+            worktype = 'anime'
+        elif message.content.lower().startswith('!manga_favgenre'):
+            worktype = 'manga'
+        else:
+            return
+
+        message_split = message.content.split(" ", 1)
+
+        if len(message_split) != 2:
+            msg = '{0.author.mention}, please type `!{1}_favgenre <user>`.'.format(message, worktype)
+            await client.send_message(message.channel, msg)
+            return
+
+        username = message_split[1].strip()
+
+        # Temporary message while working the request
+        msg = '{0.author.mention}, currently retrieving data from MyAnimeList. Please wait !'.format(message)
+        tmp = await client.send_message(message.channel, msg)
+
+        user = User(username)
+        if worktype == 'anime' or worktype == 'manga':
+            if user.retrieveWorkList(worktype) == -1:
+                msg = '{0.author.mention}, this user does not seem to exist.'.format(message)
+                await client.edit_message(tmp, msg)
+                return
+        else:
+            msg = '{0.author.mention}, something went wrong.'.format(message)
+            await client.edit_message(tmp, msg)
+            return
+
+        genres = user.favoriteGenre(worktype)
+        description = ""
+        title = "{}'s favorite {} genres".format(user.pseudo, worktype)
+
+        for genre_name, genre_count in genres:
+            description += "{}: {} {}\n".format(genre_name, genre_count, worktype+"s")
+
+        result = discord.Embed(title=title, description=description)
+        msg = '{0.author.mention}, here are the results for your request : '.format(message)
+        await client.edit_message(tmp, msg, embed=result)
+
+
 
     if message.content.lower().startswith('!anime_stats') or message.content.lower().startswith('!manga_stats'):
         if message.content.lower().startswith('!anime_stats'):

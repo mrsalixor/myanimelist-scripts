@@ -222,3 +222,25 @@ class User:
     """ Save shared works of multiple users to a .tsv file """
     def toTSV(*users, destination = 'shared_works.tsv', worktype='anime'):
         User.toCSV(*users, destination = destination, filetype = 'TSV', worktype=worktype)
+
+
+    """ Returns a sorted list of (genres, count) for animes or mangas found in this user's list """
+    def favoriteGenre(self, worktype):
+        genre_count = {}
+        genre_names = {}
+
+        for key, work in self.works.items():
+            # If this work is not of the correct type, skip it
+            if (worktype == 'anime' and type(work) is Manga) or (worktype == 'manga' and type(work) is Anime):
+                continue
+
+            retrieve_status = work.retrieveFullInfo()
+            if retrieve_status < 0:
+                break
+
+            for genre_id, genre_name in work.genres:
+                genre_count[genre_id] = 0 if not genre_id in genre_count else genre_count[genre_id]+1
+                genre_names[genre_id] = '' if not genre_id in genre_names else genre_name
+
+        final = {genre_names[key]: genre_count[key] for key in genre_count}
+        return sorted(final.items(), key=lambda x: x[1], reverse=True)[0:min(5, len(final)-1)]

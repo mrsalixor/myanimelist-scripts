@@ -37,6 +37,26 @@ class Work:
     def workType(self):
         return ""
 
+    """ Getter : full raw data for a work """
+    @property
+    def data(self):
+        return self._data
+
+    """ Getter : genres of a work """
+    @property
+    def genres(self):
+        try:
+            genres_with_id = [(int(genre_with_id.split("/")[0]), genre_name)
+                              if genre_with_id is not None and genre_name is not None
+                              else (0, '')
+                              for genre_with_id, genre_name in self._data["genres"]]
+        except ValueError:
+            genres_with_id = [(int(self._data["genres"][0].split("/")[0]), self._data["genres"][1])]
+        except TypeError:
+            genres_with_id = [(0, 'Unknown')]
+
+        return genres_with_id
+
 
     """ Work id """
     @property
