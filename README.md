@@ -38,5 +38,6 @@ There are two main functionalities provided by this bot :
 * `!manga_stats <user1,...,userN> <id/title>` : shows the list of scores or reading status for those users
 - `!anime_favgenre <user>` : the bot will show the favorite anime genres of a user
 - `!manga_favgenre <user>` : the bot will show the favorite manga genres of a user
+- `!favstudios <user>` : the bot will show the favorite anime studios of a user
 
 _Be aware that in order to use the `!anime_favgenre` or `!manga_favgenre` commands, a heavy caching of anime and manga data through [Jikan's API](https://jikan.me/) has to be made before running the bot. You can use the functions provided in `Scrapper.py` in order to cache the data._

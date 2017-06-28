@@ -10,6 +10,9 @@ anime_caches/
 manga_caches/
 *.json
 
+avatars/
+*.jpg
+
 csvfiles/
 *.csv
 *.tsv

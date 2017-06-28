@@ -44,6 +44,21 @@ class Anime(Work):
         else:
             return 1
 
+    """ Getter : studio(s) that worked on an anime """
+    @property
+    def studios(self):
+        try:
+            studios_with_id = [(int(studio_with_id.split("/")[0]), studio_name)
+                               if studio_with_id is not None and studio_name is not None
+                               else (0, '')
+                               for studio_with_id, studio_name in self._data["studios"]]
+        except ValueError:
+            studios_with_id = [(int(self._data["studios"][0].split("/")[0]), self._data["studios"][1])]
+        except TypeError:
+            studios_with_id = [(0, 'Unknown')]
+
+        return studios_with_id
+
 
     """ Number of episodes of an anime """
     @property

@@ -32,16 +32,57 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-
+    # HELP : !help
 
     if message.content.lower().startswith('!help'):
         msg = "```!anime_stats <user1,...,userN> <id/title> : scores and statuses of users for a given anime\n"
         msg += "!manga_stats <user1,...,userN> <id/title> : scores and statuses of users for a given manga\n"
         msg += "!anime_favgenre <user> : favorite anime genres for an user\n"
-        msg += "!manga_favgenre <user> : favorite manga genres for an user```"
+        msg += "!manga_favgenre <user> : favorite manga genres for an user\n"
+        msg += "!favstudios <user> : favorite anime studios for an user```"
         await client.send_message(message.channel, msg)
 
 
+    # FAVORITE ANIME STUDIO : !favstudios <user>
+
+    if message.content.lower().startswith('!favstudios'):
+        message_split = message.content.split(" ", 1)
+
+        if len(message_split) != 2:
+            msg = '{0.author.mention}, please type `!favstudios <user>`.'.format(message, worktype)
+            await client.send_message(message.channel, msg)
+            return
+
+        username = message_split[1].strip()
+
+        # Temporary message while working the request
+        msg = '{0.author.mention}, currently retrieving data from MyAnimeList. Please wait !'.format(message)
+        tmp = await client.send_message(message.channel, msg)
+
+        user = User(username)
+        if user.retrieveWorkList('anime') == -1:
+            msg = '{0.author.mention}, this user does not seem to exist.'.format(message)
+            await client.edit_message(tmp, msg)
+            return
+
+        studios = user.favoriteStudio(limit=10)
+        description = ""
+        title = "{}'s favorite anime studios".format(user.pseudo)
+
+        for studio_name, studio_count in studios:
+            description += "**{}:** {} animes\n".format(studio_name, studio_count)
+
+        user_url = "https://myanimelist.net/profile/{}".format(user.pseudo)
+        avatar_url = "https://myanimelist.cdn-dena.com/images/userimages/{}.jpg".format(user.userid)
+        color = get_main_color(avatar_url)
+
+        result = discord.Embed(title=title, description=description, url=user_url, color=color)
+        result.set_thumbnail(url=avatar_url)
+        msg = '{0.author.mention}, here are the results for your request : '.format(message)
+        await client.edit_message(tmp, msg, embed=result)
+
+
+    # FAVORITE ANIME OR MANGA GENRES : !anime_favgenre <user> OR !manga_favgenre <user>
 
     if message.content.lower().startswith('!anime_favgenre') or message.content.lower().startswith('!manga_favgenre'):
         if message.content.lower().startswith('!anime_favgenre'):
@@ -75,18 +116,24 @@ async def on_message(message):
             await client.edit_message(tmp, msg)
             return
 
-        genres = user.favoriteGenre(worktype)
+        genres = user.favoriteGenre(worktype, limit=10)
         description = ""
         title = "{}'s favorite {} genres".format(user.pseudo, worktype)
 
         for genre_name, genre_count in genres:
-            description += "{}: {} {}\n".format(genre_name, genre_count, worktype+"s")
+            description += "**{}:** {} {}\n".format(genre_name, genre_count, worktype+"s")
 
-        result = discord.Embed(title=title, description=description)
+        user_url = "https://myanimelist.net/profile/{}".format(user.pseudo)
+        avatar_url = "https://myanimelist.cdn-dena.com/images/userimages/{}.jpg".format(user.userid)
+        color = get_main_color(avatar_url)
+
+        result = discord.Embed(title=title, description=description, url=user_url, color=color)
+        result.set_thumbnail(url=avatar_url)
         msg = '{0.author.mention}, here are the results for your request : '.format(message)
         await client.edit_message(tmp, msg, embed=result)
 
 
+    # ANIME OR MANGA STATS : !anime_stats <user1,...,userN> <id/title> OR !manga_stats <user1,...,userN> <id/title>
 
     if message.content.lower().startswith('!anime_stats') or message.content.lower().startswith('!manga_stats'):
         if message.content.lower().startswith('!anime_stats'):
@@ -208,8 +255,12 @@ async def on_message(message):
 
 
 def get_main_color(url):
-    response = requests.get(url)
-    img = Image.open(BytesIO(response.content))
+    if os.path.isfile(url):
+        img = Image.open(url)
+    else:
+        response = requests.get(url)
+        img = Image.open(BytesIO(response.content))
+
     colors = img.getcolors(72000)
     max_occurence, most_present = 0, 0
     try:

@@ -1,4 +1,13 @@
 from MALWork import Work
+import Scrapper
+
+import os
+import time
+import stat
+import sys
+
+import urllib.request
+import json
 
 class Manga(Work):
     READING_STATUSES = {1: "Reading", 2: "Completed", 3: "On-hold", 4: "Dropped", 6: "Plan to read"}

@@ -16,11 +16,19 @@ import stat
 
 import csv
 
+from PIL import Image
+
+import requests
+from io import BytesIO
+from base64 import b16encode
+
 class User:
-    LIST_REFRESH_DELAY = 3600
+    LIST_REFRESH_DELAY = 3600 #1 hour
+    AVATAR_REFRESH_DELAY = 7200 #2 hours
 
     def __init__(self, pseudo):
         self.pseudo = pseudo
+        self.userid = 0
 
         self.works = {} # (id, worktype): work
         self.work_informations = {} # work: (score, status)
@@ -61,6 +69,7 @@ class User:
             work_list = xmltodict.parse(fd.read())
 
         self.pseudo = work_list["myanimelist"]["myinfo"]["user_name"]
+        self.userid = work_list["myanimelist"]["myinfo"]["user_id"]
 
         # If there's no work for the user
         if len(work_list["myanimelist"]) <= 1:
@@ -225,7 +234,7 @@ class User:
 
 
     """ Returns a sorted list of (genres, count) for animes or mangas found in this user's list """
-    def favoriteGenre(self, worktype):
+    def favoriteGenre(self, worktype, limit=5):
         genre_count = {}
         genre_names = {}
 
@@ -243,4 +252,51 @@ class User:
                 genre_names[genre_id] = '' if not genre_id in genre_names else genre_name
 
         final = {genre_names[key]: genre_count[key] for key in genre_count}
-        return sorted(final.items(), key=lambda x: x[1], reverse=True)[0:min(5, len(final)-1)]
+        return sorted(final.items(), key=lambda x: x[1], reverse=True)[0:min(limit, len(final)-1)]
+
+
+    """ Returns a sorted list of (studio, count) for animes found in this user's list """
+    def favoriteStudio(self, limit=5):
+        studio_count = {}
+        studio_names = {}
+
+        for key, work in self.works.items():
+            # If this work is not of the correct type, skip it
+            if not type(work) is Anime:
+                continue
+
+            retrieve_status = work.retrieveFullInfo()
+            if retrieve_status < 0:
+                break
+
+            for studio_id, studio_name in work.studios:
+                studio_count[studio_id] = 0 if not studio_id in studio_count else studio_count[studio_id]+1
+                studio_names[studio_id] = '' if not studio_id in studio_names else studio_name
+
+        final = {studio_names[key]: studio_count[key] for key in studio_count}
+        return sorted(final.items(), key=lambda x: x[1], reverse=True)[0:min(limit, len(final)-1)]
+
+
+    """ Save the user's avatar for a given period of time """
+    def saveAvatar(self):
+        avatar_url = "https://myanimelist.cdn-dena.com/images/userimages/{}.jpg".format(self.userid)
+        avatar_local = os.path.join('avatars', '{}.jpg'.format(self.userid))
+
+        os.makedirs('avatars', exist_ok=True)
+
+        should_retrieve = True
+        if os.path.isfile(avatar_local):
+            if time.time() - os.stat(avatar_local)[stat.ST_MTIME] <= User.AVATAR_REFRESH_DELAY:
+                should_retrieve = False
+
+        if should_retrieve:
+            response = requests.get(avatar_url)
+            img = Image.open(BytesIO(response.content))
+        else:
+            img = Image.open(avatar_local)
+
+        shorter_side = min(img.size)
+        img_crop = img.crop( (0, 0, shorter_side, shorter_side) )
+
+        img_crop.save(avatar_local)
+        return avatar_local
