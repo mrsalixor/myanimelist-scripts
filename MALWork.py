@@ -10,7 +10,6 @@ class Work:
 
         self._id = kwargs.get("id")
 
-
     """ Test of equality between two Works """
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -31,7 +30,6 @@ class Work:
         result += 31 * hash(self._series_end)
         result += 31 * hash(self._poster)
         return result
-
 
     """ Return the type of work (ONA, Movie, LN ...) in a readable format """
     def workType(self):
@@ -57,7 +55,6 @@ class Work:
 
         return genres_with_id
 
-
     """ Work id """
     @property
     def id(self):
@@ -70,7 +67,6 @@ class Work:
     @id.deleter
     def id(self):
         del self._id
-
 
     """ Work title """
     @property
@@ -85,7 +81,6 @@ class Work:
     def title(self):
         del self._title
 
-
     """ Work alternative titles """
     @property
     def alt_titles(self):
@@ -98,7 +93,6 @@ class Work:
     @alt_titles.deleter
     def alt_titles(self):
         del self._alt_titles
-
 
     """ Work type """
     @property
@@ -113,7 +107,6 @@ class Work:
     def type(self):
         del self._type
 
-
     """ Work status """
     @property
     def status(self):
@@ -126,7 +119,6 @@ class Work:
     @status.deleter
     def status(self):
         del self._status
-
 
     """ Work start date of publication / airing """
     @property
@@ -141,7 +133,6 @@ class Work:
     def series_start(self):
         del self._series_start
 
-
     """ Work end date of publication / airing """
     @property
     def series_end(self):
@@ -154,7 +145,6 @@ class Work:
     @series_end.deleter
     def series_start(self):
         del self._series_end
-
 
     """ Work poster """
     @property

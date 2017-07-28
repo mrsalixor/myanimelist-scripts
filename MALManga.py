@@ -2,12 +2,7 @@ from MALWork import Work
 import Scrapper
 
 import os
-import time
-import stat
-import sys
 
-import urllib.request
-import json
 
 class Manga(Work):
     READING_STATUSES = {1: "Reading", 2: "Completed", 3: "On-hold", 4: "Dropped", 6: "Plan to read"}
@@ -15,18 +10,16 @@ class Manga(Work):
 
     def __init__(self, manga_info_fromuserlist):
         id = int(manga_info_fromuserlist["series_mangadb_id"])
-        super().__init__(manga_info_fromuserlist, id = id)
+        super().__init__(manga_info_fromuserlist, id=id)
 
         self._chapters = manga_info_fromuserlist["series_chapters"]
         self._volumes = manga_info_fromuserlist["series_volumes"]
-
 
     def __str__(self):
         return "Manga#{} : {}".format(self.id, self.title)
 
     def workType(self):
         return self.MANGA_TYPES[self.type]
-
 
     def retrieveFullInfo(self):
         if self.id <= 0:
@@ -39,13 +32,8 @@ class Manga(Work):
 
         self._data = Scrapper.retrieveJSONfromURL(url, destination=cache_filename)
 
-        if self._data == {}:
-            return -1
-        else:
-            return 1
+        return -1 if not self._data else 1
 
-
-    """ Number of chapters of a manga """
     @property
     def chapters(self):
         return self._chapters
@@ -58,8 +46,6 @@ class Manga(Work):
     def chapters(self):
         del self._chapters
 
-
-    """ Number of volumes of a manga """
     @property
     def volumes(self):
         return self._volumes

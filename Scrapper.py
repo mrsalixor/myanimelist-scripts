@@ -5,6 +5,7 @@ import stat
 import urllib.request
 import json
 
+
 def retrieveJSONfromURL(url, destination="", cache_delay=0):
     cached = True
 
@@ -34,26 +35,22 @@ def retrieveJSONfromURL(url, destination="", cache_delay=0):
 
     return data
 
+def scrapWorks(start=0, delay=0, worktype=''):
+    if not worktype or worktype != 'manga' or worktype != 'anime':
+        return
+
+    for i in range(start, 500000):
+        url = 'http://jikan.me/api/{}/{}'.format(worktype, i)
+        os.makedirs('{}_caches'.format(worktype), exist_ok=True)
+        cache_filename = os.path.join('{}_caches'.format(worktype), '{}_{}.json'.format(worktype, i))
+
+        data = retrieveJSONfromURL(url, destination=cache_filename, cache_delay=delay)
+
+        if not data:
+            continue
 
 def scrapAnimes(start=0, delay=0):
-    for i in range(start, 500000):
-        url = 'http://jikan.me/api/anime/{}'.format(i)
-        os.makedirs('anime_caches', exist_ok=True)
-        cache_filename = os.path.join('anime_caches', 'anime_{}.json'.format(i))
-
-        data = retrieveJSONfromURL(url, destination=cache_filename, cache_delay=delay)
-
-        if data == {}:
-            continue
-
+    scrapWorks(start, delay, 'anime')
 
 def scrapMangas(start=0, delay=0):
-    for i in range(start, 500000):
-        url = 'http://jikan.me/api/manga/{}'.format(i)
-        os.makedirs('manga_caches', exist_ok=True)
-        cache_filename = os.path.join('manga_caches', 'manga_{}.json'.format(i))
-
-        data = retrieveJSONfromURL(url, destination=cache_filename, cache_delay=delay)
-
-        if data == {}:
-            continue
+    scrapWorks(start, delay, 'manga')

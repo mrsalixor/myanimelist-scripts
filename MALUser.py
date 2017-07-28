@@ -1,11 +1,9 @@
 from MALAnime import Anime
 from MALManga import Manga
-from MALWork import Work
 
 import urllib.parse
 import urllib.request
 
-import xml.dom.minidom
 import xmltodict
 
 import sys
@@ -20,31 +18,32 @@ from PIL import Image
 
 import requests
 from io import BytesIO
-from base64 import b16encode
+
 
 class User:
-    LIST_REFRESH_DELAY = 3600 #1 hour
-    AVATAR_REFRESH_DELAY = 7200 #2 hours
+    LIST_REFRESH_DELAY = 3600  # 1 hour
+    AVATAR_REFRESH_DELAY = 7200  # 2 hours
 
     def __init__(self, pseudo):
         self.pseudo = pseudo
         self.userid = 0
 
-        self.works = {} # (id, worktype): work
-        self.work_informations = {} # work: (score, status)
+        self.works = {}  # (id, worktype): work
+        self.work_informations = {}  # work: (score, status)
 
         path = "animelists"
-        if not os.path.isdir(path): os.makedirs(path)
+        if not os.path.isdir(path):
+            os.makedirs(path)
         self.anime_filename = os.path.join(path, self.pseudo + '_animelist')
 
         path = "mangalists"
-        if not os.path.isdir(path): os.makedirs(path)
+        if not os.path.isdir(path):
+            os.makedirs(path)
         self.manga_filename = os.path.join(path, self.pseudo + '_mangalist')
-
 
     """ Retrieve the work's list of a user given the type of work """
     def retrieveWorkList(self, type):
-        if type != "anime" and type != "manga":
+        if type not in ("anime", "manga"):
             sys.exit("Wrong work type")
 
         filename = self.anime_filename if type == "anime" else self.manga_filename
@@ -97,7 +96,6 @@ class User:
     def retrieveMangaList(self):
         return self.retrieveWorkList("manga")
 
-
     """ Check if a XML file corresponding to the work list of the user exists """
     def checkWorkList(self, type):
         filename = self.anime_filename if type == "anime" else self.manga_filename
@@ -106,7 +104,6 @@ class User:
             if time.time() - os.stat(filename)[stat.ST_MTIME] <= User.LIST_REFRESH_DELAY:
                 return True
         return False
-
 
     """ Return the list of works found between multiple users """
     def joinedWorks(*users):
@@ -119,9 +116,8 @@ class User:
             work_union.update(user.works)
         return work_union
 
-
     """ Return the list of works found between multiple users and the stats """
-    def joinedWorksWithStats(users, worktype, id = 0, title=""):
+    def joinedWorksWithStats(users, worktype, id=0, title=""):
         if len(users) < 2:
             print("Not enough users were provided (2 required)", flush=True)
             return {}
@@ -138,11 +134,11 @@ class User:
 
                 # Split the alternative titles
                 alt_titles = []
-                if not work.alt_titles is None:
+                if work.alt_titles is not None:
                     alt_titles = work.alt_titles.split("; ")
 
                 # Filter by id
-                if id != 0 and id != work.id:
+                if id not in (0, work.id):
                     continue
 
                 # Filter by title or alternative title
@@ -173,15 +169,14 @@ class User:
 
                 # We add the work in our final list
                 if not already_found:
-                    if not work in work_union:
+                    if work not in work_union:
                         work_union[work] = {}
                     work_union[work].update({user.pseudo.lower(): user.work_informations[work]})
 
         return work_union
 
-
     """ Save shared works of multiple users to a .csv file """
-    def toCSV(users, destination = 'shared_works.csv', filetype = 'CSV', worktype='anime'):
+    def toCSV(users, destination='shared_works.csv', filetype='CSV', worktype='anime'):
         delimiter = '\t' if (filetype == 'TSV') else '|'
 
         if len(users) < 2:
@@ -227,11 +222,9 @@ class User:
         print("The {} {} file for users {} was generated".format(worktype, filetype, pseudos_string), flush=True)
         return 0
 
-
     """ Save shared works of multiple users to a .tsv file """
-    def toTSV(*users, destination = 'shared_works.tsv', worktype='anime'):
-        User.toCSV(*users, destination = destination, filetype = 'TSV', worktype=worktype)
-
+    def toTSV(*users, destination='shared_works.tsv', worktype='anime'):
+        User.toCSV(*users, destination=destination, filetype='TSV', worktype=worktype)
 
     """ Returns a sorted list of (genres, count) for animes or mangas found in this user's list """
     def favoriteGenre(self, worktype, limit=5):
@@ -248,12 +241,11 @@ class User:
                 break
 
             for genre_id, genre_name in work.genres:
-                genre_count[genre_id] = 0 if not genre_id in genre_count else genre_count[genre_id]+1
-                genre_names[genre_id] = '' if not genre_id in genre_names else genre_name
+                genre_count[genre_id] = 0 if genre_id not in genre_count else genre_count[genre_id] + 1
+                genre_names[genre_id] = '' if genre_id not in genre_names else genre_name
 
         final = {genre_names[key]: genre_count[key] for key in genre_count}
-        return sorted(final.items(), key=lambda x: x[1], reverse=True)[0:min(limit, len(final)-1)]
-
+        return sorted(final.items(), key=lambda x: x[1], reverse=True)[0:min(limit, len(final) - 1)]
 
     """ Returns a sorted list of (studio, count) for animes found in this user's list """
     def favoriteStudio(self, limit=5):
@@ -262,7 +254,7 @@ class User:
 
         for key, work in self.works.items():
             # If this work is not of the correct type, skip it
-            if not type(work) is Anime:
+            if type(work) is not Anime:
                 continue
 
             retrieve_status = work.retrieveFullInfo()
@@ -270,12 +262,11 @@ class User:
                 break
 
             for studio_id, studio_name in work.studios:
-                studio_count[studio_id] = 0 if not studio_id in studio_count else studio_count[studio_id]+1
-                studio_names[studio_id] = '' if not studio_id in studio_names else studio_name
+                studio_count[studio_id] = 0 if studio_id not in studio_count else studio_count[studio_id] + 1
+                studio_names[studio_id] = '' if studio_id not in studio_names else studio_name
 
         final = {studio_names[key]: studio_count[key] for key in studio_count}
-        return sorted(final.items(), key=lambda x: x[1], reverse=True)[0:min(limit, len(final)-1)]
-
+        return sorted(final.items(), key=lambda x: x[1], reverse=True)[0:min(limit, len(final) - 1)]
 
     """ Save the user's avatar for a given period of time """
     def saveAvatar(self):
@@ -296,7 +287,7 @@ class User:
             img = Image.open(avatar_local)
 
         shorter_side = min(img.size)
-        img_crop = img.crop( (0, 0, shorter_side, shorter_side) )
+        img_crop = img.crop((0, 0, shorter_side, shorter_side))
 
         img_crop.save(avatar_local)
         return avatar_local

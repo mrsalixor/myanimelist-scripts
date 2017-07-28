@@ -1,22 +1,17 @@
 import discord
-import asyncio
 
-import csv
-import urllib.request
 import os
 import sys
-import time
-import stat
 
 from PIL import Image
 
 import requests
 from io import BytesIO
-from base64 import b16encode
 
 from MALUser import User
 
 client = discord.Client()
+
 
 @client.event
 async def on_ready():
@@ -26,6 +21,7 @@ async def on_ready():
     print('---------------------------------', flush=True)
 
     await client.change_presence(game=discord.Game(name='!help'))
+
 
 @client.event
 async def on_message(message):
@@ -42,14 +38,12 @@ async def on_message(message):
         msg += "!favstudios <user> : favorite anime studios for an user```"
         await client.send_message(message.channel, msg)
 
-
     # FAVORITE ANIME STUDIO : !favstudios <user>
-
     if message.content.lower().startswith('!favstudios'):
         message_split = message.content.split(" ", 1)
 
         if len(message_split) != 2:
-            msg = '{0.author.mention}, please type `!favstudios <user>`.'.format(message, worktype)
+            msg = '{0.author.mention}, please type `!favstudios <user>`.'.format(message)
             await client.send_message(message.channel, msg)
             return
 
@@ -81,9 +75,7 @@ async def on_message(message):
         msg = '{0.author.mention}, here are the results for your request : '.format(message)
         await client.edit_message(tmp, msg, embed=result)
 
-
     # FAVORITE ANIME OR MANGA GENRES : !anime_favgenre <user> OR !manga_favgenre <user>
-
     if message.content.lower().startswith('!anime_favgenre') or message.content.lower().startswith('!manga_favgenre'):
         if message.content.lower().startswith('!anime_favgenre'):
             worktype = 'anime'
@@ -132,9 +124,7 @@ async def on_message(message):
         msg = '{0.author.mention}, here are the results for your request : '.format(message)
         await client.edit_message(tmp, msg, embed=result)
 
-
     # ANIME OR MANGA STATS : !anime_stats <user1,...,userN> <id/title> OR !manga_stats <user1,...,userN> <id/title>
-
     if message.content.lower().startswith('!anime_stats') or message.content.lower().startswith('!manga_stats'):
         if message.content.lower().startswith('!anime_stats'):
             worktype = 'anime'
@@ -233,7 +223,6 @@ async def on_message(message):
                         result.add_field(name=pseudo, value="Unknown status")
                 else:
                     result.add_field(name=pseudo, value="Not in list")
-
 
             msg = '{0.author.mention}, here are the results for your request : '.format(message)
             await client.edit_message(tmp, msg, embed=result)
